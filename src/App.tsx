@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css"
-import { Button } from "react-bootstrap"
+import { Button, Container, Row, Col } from "react-bootstrap"
 import React, { useState } from "react"
 import DockLayout, { LayoutData } from "rc-dock"
 import "rc-dock/dist/rc-dock.css"
@@ -21,7 +21,11 @@ function SomeRenderer() {
 
     dockLayout.dockMove(newTab, 'prime', 'middle')
   }
-  return <Button onClick={() => { setStr(str + "dd"); addTab() }}>{str}</Button>
+  return <Container>
+    <Row className="mx-0">
+      <Button as={Col} onClick={() => { setStr(str + "dd"); addTab() }}>{str}</Button>
+    </Row>
+  </Container>
 }
 
 let defaultLayout: LayoutData = {
@@ -40,7 +44,12 @@ let defaultLayout: LayoutData = {
 }
 
 function App() {
-  return (
+  const [url, setUrl] = useState("");
+  const [token, setToken] = useState("");
+
+  return url.length === 0 ? (
+    <Login setUrl={setUrl} setToken={setToken}></Login>
+  ) : (
     <DockLayout
       ref={getRef}
       defaultLayout={defaultLayout}
