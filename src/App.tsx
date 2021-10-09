@@ -48,7 +48,7 @@ function App() {
   const [token, setToken] = useState("");
 
   return url.length === 0 ? (
-    <Login setUrl={setUrl} setToken={setToken}></Login>
+    <Login setUrl={setUrl} setToken={setToken}/>
   ) : (
     <DockLayout
       ref={getRef}
