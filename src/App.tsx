@@ -7,54 +7,6 @@ import Login from "./Login"
 import {ApiServerUrlContext} from "./Common";
 import {SessionListPanel} from "./SessionListPanel";
 
-let dockLayout: DockLayout;
-
-function getRef(r: DockLayout) {
-  dockLayout = r;
-}
-
-function SomeRenderer() {
-  const [str, setStr] = useState("hell, world!");
-  const addTab = () => {
-    const newTab = {
-      id: str,
-      content: <div>hello, my world!</div>,
-      title: str
-    };
-
-    dockLayout.dockMove(newTab, 'prime', 'middle')
-  }
-  return <Container>
-    <Row className="mx-0">
-      <Button as={Col} onClick={() => {
-        setStr(str + "dd");
-        addTab()
-      }}>{str}</Button>
-    </Row>
-  </Container>
-}
-
-const exampleLayout: LayoutData = {
-  dockbox: {
-    mode: "horizontal",
-    children: [
-      {
-        id: 'prime',
-        tabs: [
-          {id: "tab1", title: "tabA", content: <SomeRenderer/>},
-          {id: "tab2", title: "tab2", content: <div>hellworld 2</div>}
-        ]
-      }, {
-        id: 'subprime',
-        minWidth: 240,
-        tabs: [
-          {id: "tabcc", title: "mvovo", content: <div>wtf?</div>}
-        ]
-      }
-    ]
-  }
-}
-
 const defaultLayout: LayoutData = {
   dockbox: {
     mode: "horizontal",
@@ -68,11 +20,27 @@ const defaultLayout: LayoutData = {
             content: <ApiServerUrlContext.Consumer>
               {value => <SessionListPanel url={value}/>}
             </ApiServerUrlContext.Consumer>
+          },
+          {
+            id:'sampl0',
+            title: 'sampl0',
+            content: <div>sample 0</div>
+          },
+          {
+            id:'sampl1',
+            title: 'sampl1',
+            content: <div>sample 0</div>
           }
         ]
       }
     ]
   }
+}
+
+
+export let dockRef: DockLayout;
+function getDockRef(r: DockLayout) {
+  dockRef = r;
 }
 
 function App() {
@@ -84,14 +52,15 @@ function App() {
   ) : (
     <ApiServerUrlContext.Provider value={url}>
       <DockLayout
-        ref={getRef}
+        ref={getDockRef}
         defaultLayout={defaultLayout}
         style={{
           position: "absolute",
           left: 10,
           top: 10,
           right: 10,
-          bottom: 10
+          bottom: 10,
+          fontFamily: "Lucida Console"
         }}
       />
     </ApiServerUrlContext.Provider>
