@@ -1,12 +1,9 @@
 import "bootstrap/dist/css/bootstrap.css"
 import {Button, Container, Row, Col} from "react-bootstrap"
-import React, {useEffect, useState} from "react"
-import DockLayout, {BoxData, LayoutData, PanelBase, PanelData} from "rc-dock"
+import React, {useState} from "react"
 import "rc-dock/dist/rc-dock.css"
-import {ApiServerUrlContext} from "./Common";
-import {useInterval, useIntervalImmediate} from "./Utils"
-import axios from "axios";
-import {stringify} from "querystring";
+import {useIntervalImmediate} from "./Utils"
+import {axiosInstance} from "./Common";
 
 interface SessionInfo {
   name: string;
@@ -45,7 +42,7 @@ export function SessionListPanel(prop: { url: string, onSelect: (id: string) => 
   const [sessionList, setSessionList] = useState([]);
 
   const fetchSession = () => {
-    axios.get(prop.url + "/sessions").then(
+    axiosInstance.get(prop.url + "/sessions").then(
       (obj) => {
         console.log(`fetched: ${JSON.stringify(obj.data)}`);
         const sessions: { [key: string]: SessionInfo } = obj.data['sessions'];
@@ -59,7 +56,7 @@ export function SessionListPanel(prop: { url: string, onSelect: (id: string) => 
             <SessionListArgument
               info={sessions[key]}
               key={key}
-              onSelect={()=>prop.onSelect(key)}/>);
+              onSelect={() => prop.onSelect(key)}/>);
         }
 
         console.log(`result list: ${JSON.stringify(sessList)}`);
@@ -70,10 +67,7 @@ export function SessionListPanel(prop: { url: string, onSelect: (id: string) => 
     })
   };
 
-  useIntervalImmediate(
-    fetchSession,
-    10000
-  );
+  useIntervalImmediate(fetchSession, 3000);
 
   return <div className={"overflow-auto"}>
     <div>.</div>
