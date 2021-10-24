@@ -1,68 +1,46 @@
 import "bootstrap/dist/css/bootstrap.min.css"
-import {Button, Container, Row, Col} from "react-bootstrap"
-import React, {useState} from "react"
-import DockLayout, {LayoutData} from "rc-dock"
-import "rc-dock/dist/rc-dock.css"
+import React, {useEffect, useState} from "react"
 import Login from "./Login"
 import {ApiServerUrlContext} from "./Common";
 import {SessionListPanel} from "./SessionListPanel";
-
-const defaultLayout: LayoutData = {
-  dockbox: {
-    mode: "horizontal",
-    children: [
-      {
-        id: 'left',
-        tabs: [
-          {
-            cached: true, id: 'sessions',
-            title: 'Active Sessions',
-            content: <ApiServerUrlContext.Consumer>
-              {value => <SessionListPanel url={value}/>}
-            </ApiServerUrlContext.Consumer>
-          },
-          {
-            id:'sampl0',
-            title: 'sampl0',
-            content: <div>sample 0</div>
-          },
-          {
-            id:'sampl1',
-            title: 'sampl1',
-            content: <div>sample 0</div>
-          }
-        ]
-      }
-    ]
-  }
-}
-
-
-export let dockRef: DockLayout;
-function getDockRef(r: DockLayout) {
-  dockRef = r;
-}
+import {SessionDashboard} from "./SessionDashboard";
 
 function App() {
   const [url, setUrl] = useState("");
   const [token, setToken] = useState("");
+  const [activeSession, setActiveSession] = useState("");
+  const [activatedSessions, setActivatedSessions] = useState<{ [key: string]: any }>({});
+  const [dashboardRender, setDashboardRender] = useState(<div>No Sessions Loaded</div>);
+
+  useEffect(() => {
+    if (activeSession.length == 0)
+      return;
+
+    console.log(`active session changed: ${activeSession}`);
+    if (!(activeSession in activatedSessions)) {
+      let cloned = activatedSessions;
+      cloned[activeSession] =
+        <div style={{margin: 5}}>
+          <SessionDashboard url={url} sessionKey={activeSession}/>
+        </div>
+      setActivatedSessions(cloned)
+      setDashboardRender(cloned[activeSession])
+      console.log(`updating activated session ... ${JSON.stringify(cloned)}`);
+    }
+  }, [activeSession]);
 
   return url.length === 0 ? (
     <Login setUrl={setUrl} setToken={setToken}/>
   ) : (
     <ApiServerUrlContext.Provider value={url}>
-      <DockLayout
-        ref={getDockRef}
-        defaultLayout={defaultLayout}
-        style={{
-          position: "absolute",
-          left: 10,
-          top: 10,
-          right: 10,
-          bottom: 10,
-          fontFamily: "Lucida Console"
-        }}
-      />
+      <div style={{display: "flex", height: "100vh"}}>
+        <div style={{minWidth: 400, flex: "0 1 0", overflow: "auto", borderRight: "1px solid black"}}>
+          <SessionListPanel url={url} onSelect={setActiveSession}/>
+        </div>
+        <div style={{flex: "1 1 0"}}>
+        {dashboardRender}
+        </div>
+      </div>
     </ApiServerUrlContext.Provider>
   );
 }
