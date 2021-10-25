@@ -42,7 +42,7 @@ export function SessionListPanel(prop: { url: string, onSelect: (id: string) => 
   const [sessionList, setSessionList] = useState([]);
 
   const fetchSession = () => {
-    axiosInstance.get(prop.url + "/sessions").then(
+    axiosInstance.get( "sessions").then(
       (obj) => {
         console.log(`fetched: ${JSON.stringify(obj.data)}`);
         const sessions: { [key: string]: SessionInfo } = obj.data['sessions'];

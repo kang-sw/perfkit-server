@@ -1,8 +1,12 @@
 import React from "react";
-import axios from "axios";
+import axios, {AxiosRequestConfig} from "axios";
 
 export const ApiServerUrlContext = React.createContext("");
 export let axiosInstance = axios.create();
+
+export function RefreshAxiosInstance(param : AxiosRequestConfig){
+  axiosInstance = axios.create(param);
+}
 
 interface ApiUrlSessionId {
   url: string,

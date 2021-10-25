@@ -1,9 +1,10 @@
 import "bootstrap/dist/css/bootstrap.min.css"
 import React, {useCallback, useEffect, useState} from "react"
 import Login from "./Login"
-import {ApiServerUrlContext, ApiUrlSessionIdContext} from "./Common";
+import {ApiServerUrlContext, ApiUrlSessionIdContext, axiosInstance, RefreshAxiosInstance} from "./Common";
 import {SessionListPanel} from "./SessionListPanel";
 import {SessionDashboard} from "./SessionDashboard";
+import axios from "axios";
 
 function App() {
   const [url, setUrl] = useState("");
@@ -42,8 +43,16 @@ function App() {
       setDashboardRender(<div>Session Expired</div>);
     }, [activeSession, aliveSessions]);
 
+  function onSetUrl(newUrl:string){
+    setUrl(newUrl);
+    RefreshAxiosInstance({
+      baseURL:newUrl
+      // todo: auth:
+    })
+  }
+
   return url.length === 0 ? (
-    <Login setUrl={setUrl} setToken={setToken}/>
+    <Login setUrl={onSetUrl} setToken={setToken}/>
   ) : (
     <ApiServerUrlContext.Provider value={url}>
       <ApiUrlSessionIdContext.Provider
