@@ -17,6 +17,8 @@ function SessionTerminal(prop: { url: string, sessionKey: string, sessionDead: a
   const fitter = useRef<FitAddon>(new FitAddon());
   const [charFence, setCharFence] = useState(0);
   const [errorCounter, setErrorCounter] = useState(0);
+  const history = useRef<Array<string>>([""]);
+  const [historyCursor, setHistoryCursor] = useState(0);
 
   useInterval(() => {
     axiosInstance
@@ -43,6 +45,32 @@ function SessionTerminal(prop: { url: string, sessionKey: string, sessionDead: a
 
   async function onKeyPress(e: any) {
     const keyName: string = e.key;
+    history.current[history.current.length - 1] = shellInput;
+
+    // control history
+    if (keyName == 'ArrowUp' || keyName == 'ArrowDown') {
+      e.preventDefault();
+      let next = historyCursor;
+      if (keyName == 'ArrowUp')
+        next += 1;
+      else
+        next -= 1;
+
+      next = next < 0
+        ? 0
+        : next >= history.current.length
+          ? history.current.length - 1
+          : next;
+
+      console.log(`next is ${next}, history is ${history.current}`)
+
+      if (next != historyCursor) {
+        setHistoryCursor(next);
+        setShellInput(history.current[history.current.length - 1 - next]);
+      }
+      return;
+    }
+
     if (keyName != 'Enter' && keyName != 'Tab')
       return;
 
@@ -50,8 +78,21 @@ function SessionTerminal(prop: { url: string, sessionKey: string, sessionDead: a
     const isInvoke = keyName == 'Enter';
     const input = shellInput;
 
-    if (isInvoke)
+    if (isInvoke) {
       setShellInput("");
+      setHistoryCursor(0);
+
+      const bIsFirst = history.current.length < 2;
+      const bDuplicated = !bIsFirst
+        && (history.current[history.current.length - 1]
+          == history.current[history.current.length - 2])
+      const bNotEmpty = input.length > 0;
+      if (bNotEmpty && !bDuplicated) {
+        history.current.push(input);
+        if (history.current.length > 50)
+          history.current.shift();
+      }
+    }
 
     try {
       const fetched = await axiosInstance.post(
@@ -68,6 +109,8 @@ function SessionTerminal(prop: { url: string, sessionKey: string, sessionDead: a
       const data: any = fetched.data;
       setShellInput(data['suggestion']);
 
+      // if user pressed tab, replace current input string with output suggestion,
+      //  and print the list of candidate words to console.
       const term = terminal.current?.terminal as Terminal;
       const cols = term.cols;
       const candidates: Array<string> = data['candidates'];
@@ -109,11 +152,11 @@ function SessionTerminal(prop: { url: string, sessionKey: string, sessionDead: a
     <input
       style={{
         width: "100%",
-        backgroundColor: "black",
-        color: "white",
+        backgroundColor: "#ccffcc",
+        color: "black",
         fontFamily: "Cascadia Mono"
       }}
-      placeholder={"$"}
+      placeholder={"$ enter command here"}
       value={shellInput}
       onChange={(e) => setShellInput(e.target.value)}
       onKeyDown={(e) => (onKeyPress(e))}
