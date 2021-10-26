@@ -1,13 +1,13 @@
 import {useEffect, useRef, useState} from 'react';
 
-export function useInterval(callback: any, delay: number) {
-  const [fence, setFence] = useState<number>(0);
+export function useInterval(callback: any, delay: number, immediate?: boolean) {
+  const [fence, setFence] = useState(0);
   const tick = useRef();
   tick.current = callback;
 
   useEffect(() => {
     function trigger() {
-      setFence(fence => fence + 1);
+      setFence(idx => idx + 1);
     }
 
     if (delay != null) {
@@ -18,28 +18,13 @@ export function useInterval(callback: any, delay: number) {
   }, [delay])
 
   useEffect(() => {
-    if (fence > 0) (tick.current as any)();
+    if (immediate == true)
+      (tick.current as any)();
+    else if (fence > 0)
+      (tick.current as any)();
   }, [fence]);
 }
 
 export function useIntervalImmediate(callback: any, delay: number) {
-  const [fence, setFence] = useState<number>(0);
-  const tick = useRef();
-  tick.current = callback;
-
-  useEffect(() => {
-    function trigger() {
-      setFence(fence => fence + 1);
-    }
-
-    if (delay != null) {
-      setFence(fence => fence + 1);
-      const id = setInterval(trigger, delay)
-      return () => clearInterval(id);
-    }
-  }, [delay])
-
-  useEffect(() => {
-    (tick.current as any)();
-  }, [fence]);
+  useInterval(callback, delay, true);
 }

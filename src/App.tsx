@@ -10,43 +10,33 @@ function App() {
   const [url, setUrl] = useState("");
   const [token, setToken] = useState("");
   const [activeSession, setActiveSession] = useState("");
-  const [aliveSessions, setAliveSessions] = useState<{ [key: string]: any }>({});
   const [dashboardRender, setDashboardRender] = useState(<div>No Sessions Loaded</div>);
 
-  useEffect(() => {
-    if (activeSession.length == 0)
-      return;
+  useEffect(
+    () => {
+      if (activeSession.length == 0)
+        return;
 
-    console.log(`active session changed: ${activeSession}`);
-    if (!(activeSession in aliveSessions)) {
-      let cloned = aliveSessions;
-      cloned[activeSession] =
+      console.log(`active session changed: ${activeSession}`);
+      setDashboardRender(
         <div style={{margin: 5}}>
           <SessionDashboard/>
         </div>
-      setAliveSessions(cloned)
-      setDashboardRender(cloned[activeSession])
-      console.log(`updating activated session ... ${JSON.stringify(cloned)}`);
-    }
-  }, [activeSession]);
+      );
+    }, [activeSession]);
 
   const onSessionDead = useCallback(
     (sessionKey: string) => {
       if (sessionKey == activeSession)
         setActiveSession("");
 
-      setAliveSessions((value) => {
-        delete value[sessionKey];
-        return value;
-      })
-
       setDashboardRender(<div>Session Expired</div>);
-    }, [activeSession, aliveSessions]);
+    }, [activeSession]);
 
-  function onSetUrl(newUrl:string){
+  function onSetUrl(newUrl: string) {
     setUrl(newUrl);
     RefreshAxiosInstance({
-      baseURL:newUrl
+      baseURL: newUrl
       // todo: auth:
     })
   }
