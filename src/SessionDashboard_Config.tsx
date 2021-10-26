@@ -80,7 +80,7 @@ export function SessionConfigPanel(prop: { sessionKey: string }) {
     return <ConfigCategory key={name} name={name} entities={entities}/>
   })
 
-  return <div style={{padding: 0, fontFamily: "consolas"}}>{widgets}</div>
+  return <div style={{padding: 0, fontFamily: "consolas", overflow: "auto", maxHeight: "100%"}}>{widgets}</div>
 }
 
 
@@ -134,38 +134,38 @@ function NodeDepth(entity: CategoryNode | null) {
 }
 
 function ConfigCategorySubContents(prop: { nodeIterator: CategoryNode }) {
-  const [widgets, setWidgets] = useState([]);
   const depth = NodeDepth(prop.nodeIterator);
   const [foldedState, setFoldedState] = useState(true);
 
-  useEffect(()=>{
+  useEffect(() => {
     setFoldedState(prop.nodeIterator.folded);
   }, [prop.nodeIterator.folded]);
 
-  useEffect( // do construct
-    () => {
-      console.log(`Constructing category widget {${prop.nodeIterator.name}} `)
-      setWidgets(prop.nodeIterator.children.map(
-        entityRaw => {
-          if (IsDataEntity(entityRaw)) {
-            const entity = entityRaw as ConfigData;
-            return <Row as={"button"} key={entity.hash} style={{margin: 0, padding: 0}}>
-              <Col style={{textAlign: "left"}}>| {ConfigName(entity)}</Col>
-              <Col style={{textAlign: "right"}}>{JSON.stringify(entity.value)}</Col>
-            </Row>;
-          } else {
-            const entity = entityRaw as CategoryNode;
-            return <ConfigCategorySubContents key={entity.name} nodeIterator={entity}/>
-          }
-        }
-      ) as any);
-    }, [prop.nodeIterator]);
+  console.log(`Constructing category widget {${prop.nodeIterator.name}} `)
+  const widgets = (prop.nodeIterator.children.map(
+    entityRaw => {
+      if (IsDataEntity(entityRaw)) {
+        const entity = entityRaw as ConfigData;
+        return <ConfigEntityPanel key={entity.hash} data={entity}/>;
+      } else {
+        const entity = entityRaw as CategoryNode;
+        return <ConfigCategorySubContents key={entity.name} nodeIterator={entity}/>
+      }
+    }
+  ));
 
   const buttonColor = foldedState ? "info" : "primary";
   return <Row style={{margin: 0, padding: 0}}>
     {prop.nodeIterator.name === "__root__" ? ""
       : <Row style={{padding: 0, margin: 0, paddingLeft: (depth - 2) * 12}}>
-        <Button style={{border:"1px solid black",padding: 0, paddingLeft: 8, paddingRight: 8, width: "100%", textAlign: "left"}}
+        <Button style={{
+          border: "1px solid black",
+          padding: 0,
+          paddingLeft: 8,
+          paddingRight: 8,
+          width: "100%",
+          textAlign: "left"
+        }}
                 onClick={() => {
                   prop.nodeIterator.folded = !prop.nodeIterator.folded;
                   setFoldedState(prop.nodeIterator.folded);
@@ -185,7 +185,64 @@ function ConfigCategorySubContents(prop: { nodeIterator: CategoryNode }) {
 
 
 function ConfigEntityPanel(prop: { data: ConfigData }) {
+  const entity = prop.data;
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
 
+  useEffect(() => setEditValue(JSON.stringify(entity.value, null, 2)), [editing]);
+
+  const sourceValueStr = JSON.stringify(entity.value, null, 2);
+  let valueStr = sourceValueStr;
+  if (valueStr.length > 25) {
+    valueStr = valueStr.slice(0, 25);
+    valueStr += "..."
+  }
+
+  return <Row style={{margin: 0, padding: 0}}>
+    <Row style={{margin: 0, padding: 0, backgroundColor: editing ? "#ffee00" : "lightgray"}}
+         as={"button"}
+         onClick={() => setEditing(v => !v)}>
+      <Col style={{textAlign: "left"}}>{ConfigName(entity)}</Col>
+      <Col style={{textAlign: "right"}}>{valueStr}</Col>
+    </Row>
+    {!editing ? "" :
+      <Row style={{
+        border: "1px solid black",
+        margin: 0,
+        padding: 0,
+        paddingLeft: 24,
+        backgroundColor: "black",
+        color: "white"
+      }}
+           onClick={(e: any) => e.preventDefault()}>
+        <Row style={{padding: 0}}>
+          <Col md="auto">[value]</Col>
+          <Col style={{textAlign: "right", padding: 0}}>{sourceValueStr}</Col>
+        </Row>
+        <Row style={{padding: 0}}>
+          <Col sm={1}/>
+          <Col as={"p"}
+               style={{textAlign: "left", padding: 0, whiteSpace: "pre", color: "#aaaaaa"}}>
+            {JSON.stringify(entity.metadata, null, 2)}
+          </Col>
+        </Row>
+        <Row style={{padding: 0}}>
+          <Col md={"auto"} style={{}}>[set]</Col>
+          <Col sm={1}/>
+          <Col as={"textarea"}
+               style={{padding: 0, backgroundColor: "#222222", color: "lightgreen"}}
+               value={editValue}
+               onChange={(e: any) => setEditValue(e.value)}/>
+        </Row>
+        <Row>
+          <Button style={{margin: 8, padding: 0}}
+                  variant={"warning"}>
+            Commit
+          </Button>
+        </Row>
+      </Row>
+    }
+  </Row>;
 }
 
 function ConfigName(data: ConfigData) {
