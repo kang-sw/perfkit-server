@@ -2,8 +2,8 @@ import "bootstrap/dist/css/bootstrap.min.css"
 
 import {axiosInstance} from "./Common";
 import {useEffect, useRef, useState} from "react";
-import {useIntervalImmediate, useIntervalState, useIntervalStateImmediate} from "./Utils";
-import {Container, Row} from "react-bootstrap";
+import {useIntervalImmediate} from "./Utils";
+import {Badge, Button, Col, Container, Row} from "react-bootstrap";
 
 interface ConfigData {
   hash: number,
@@ -27,7 +27,15 @@ export function SessionConfigPanel(prop: { sessionKey: string }) {
   const registries = useRef<Array<{ name: string, entities: Array<ConfigData> }>>([]);
   const [redrawTrigger, setRedrawTrigger] = useState(0);
 
-  console.log("config rerender")
+  console.log(`config redraw: ${redrawTrigger}:${fetchFence.current}`)
+
+  useEffect(() => {
+    return () => {
+      registries.current = [];
+      dataMapping.current = {};
+      fetchFence.current = 0;
+    };
+  }, [])
 
   useIntervalImmediate(
     function PeriodicConfigFetch() {
@@ -72,51 +80,116 @@ export function SessionConfigPanel(prop: { sessionKey: string }) {
     return <ConfigCategory key={name} name={name} entities={entities}/>
   })
 
-  return <div style={{padding: 0}}>{widgets}</div>
+  return <div style={{padding: 0, fontFamily: "consolas"}}>{widgets}</div>
 }
 
 
 function ConfigCategory(prop: { name: string, entities: Array<ConfigData> }) {
   const [folded, setFolded] = useState(true);
-  const buttonColor = folded ? "lightgray" : "lightgreen";
-  const [root, setRoot] = useState<CategoryNode>({name: "__root__", children: [], parent: null});
+  const [root, setRoot] = useState<CategoryNode>();
 
   useEffect(
     function ConstructTree() {
-      setRoot(root => {
-        RecursiveConfigTreeBuilder(prop.entities, {current: 0}, [], root);
-        return root;
+      setRoot(_unused => {
+        const nodeRoot: CategoryNode = {name: "__root__", children: [], parent: null, folded: false};
+        RecursiveConfigTreeBuilder(prop.entities, {current: 0}, [], nodeRoot);
+        return nodeRoot;
       });
       console.log(`Built Config Category Tree Data for {${prop.name}}`)
-    }, []);
+    }, [prop.name, prop.entities]);
 
-  return <Container style={{maxWidth: "100%", padding: 0, overflow: "auto", maxHeight: "100%"}}>
-    <Row as={"button"}
-         style={{width: "100%", margin: 0, backgroundColor: buttonColor}}
+  const buttonColor = folded ? "secondary" : "success";
+  return <Container
+    style={{border: "1px solid black", maxWidth: "100%", padding: 0, overflow: "auto", maxHeight: "100%"}}>
+    <Row style={{width: "100%", margin: 0}}
          onClick={() => setFolded(value => !value)}>
-      {prop.name}
+      <Button variant={buttonColor}><h6>{prop.name}</h6></Button>
     </Row>
     <Row style={{margin: 0}}>
-      {folded ? "" : <ConfigCategorySubContents nodeIterator={root}/>}
+      {folded ? "" : <ConfigCategorySubContents nodeIterator={root as CategoryNode}/>}
     </Row>
   </Container>
 }
 
 interface CategoryNode {
-  name: string,
+  name: string
   parent: CategoryNode | null
+  folded: boolean
   children: Array<ConfigData | CategoryNode>
+}
+
+function IsDataEntity(entity: ConfigData | CategoryNode) {
+  return 'hash' in entity;
+}
+
+function NodeDepth(entity: CategoryNode | null) {
+  let depth = 0;
+
+  while (entity != null) {
+    entity = entity.parent;
+    depth++;
+  }
+
+  return depth;
 }
 
 function ConfigCategorySubContents(prop: { nodeIterator: CategoryNode }) {
   const [widgets, setWidgets] = useState([]);
+  const depth = NodeDepth(prop.nodeIterator);
+  const [foldedState, setFoldedState] = useState(true);
 
-  useEffect(
-    function Construct() {
+  useEffect(()=>{
+    setFoldedState(prop.nodeIterator.folded);
+  }, [prop.nodeIterator.folded]);
 
-    }, []);
+  useEffect( // do construct
+    () => {
+      console.log(`Constructing category widget {${prop.nodeIterator.name}} `)
+      setWidgets(prop.nodeIterator.children.map(
+        entityRaw => {
+          if (IsDataEntity(entityRaw)) {
+            const entity = entityRaw as ConfigData;
+            return <Row as={"button"} key={entity.hash} style={{margin: 0, padding: 0}}>
+              <Col style={{textAlign: "left"}}>| {ConfigName(entity)}</Col>
+              <Col style={{textAlign: "right"}}>{JSON.stringify(entity.value)}</Col>
+            </Row>;
+          } else {
+            const entity = entityRaw as CategoryNode;
+            return <ConfigCategorySubContents key={entity.name} nodeIterator={entity}/>
+          }
+        }
+      ) as any);
+    }, [prop.nodeIterator]);
 
-  return <div>hello!</div>
+  const buttonColor = foldedState ? "info" : "primary";
+  return <Row style={{margin: 0, padding: 0}}>
+    {prop.nodeIterator.name === "__root__" ? ""
+      : <Row style={{padding: 0, margin: 0, paddingLeft: (depth - 2) * 12}}>
+        <Button style={{border:"1px solid black",padding: 0, paddingLeft: 8, paddingRight: 8, width: "100%", textAlign: "left"}}
+                onClick={() => {
+                  prop.nodeIterator.folded = !prop.nodeIterator.folded;
+                  setFoldedState(prop.nodeIterator.folded);
+                }}
+                variant={buttonColor}>
+          {prop.nodeIterator.name}
+        </Button>
+      </Row>
+    }
+    {foldedState ? "" :
+      <Row style={{margin: 0, padding: 0, paddingLeft: (depth - 1) * 12}}>
+        {widgets}
+      </Row>
+    }
+  </Row>;
+}
+
+
+function ConfigEntityPanel(prop: { data: ConfigData }) {
+
+}
+
+function ConfigName(data: ConfigData) {
+  return data.hierarchical_name.split("|").at(-1);
 }
 
 function ArrayEquals(a: Array<any>, b: Array<any>) {
@@ -156,7 +229,8 @@ function RecursiveConfigTreeBuilder(
         {
           name: entityParentHierarchy[entityParentHierarchy.length - 1],
           parent: node,
-          children: []
+          children: [],
+          folded: false,
         };
       node.children.push(newNode);
 

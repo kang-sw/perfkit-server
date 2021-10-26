@@ -2,7 +2,6 @@ import {useEffect, useRef, useState} from 'react';
 
 
 export function useInterval(callback: () => void, delay: number, immediate?: boolean) {
-  const fence = useRef(0);
   const tick = useRef(() => {
   });
 
@@ -17,7 +16,7 @@ export function useInterval(callback: () => void, delay: number, immediate?: boo
 
     const key = setInterval(tickFn, delay);
     return () => clearInterval(key);
-  }, [delay]);
+  }, [delay, immediate]);
 }
 
 export function useIntervalImmediate(callback: any,  delay:number){

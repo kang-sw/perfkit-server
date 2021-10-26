@@ -1,6 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css"
-import {Button, InputGroup, Container, Row, Col, FormControl, Form, FormGroup} from "react-bootstrap"
-import {FormEvent, useState} from "react"
+import {Button, Form} from "react-bootstrap"
+import { useState} from "react"
 
 interface LoginProps {
     setUrl: (url: string) => void;

@@ -1,10 +1,9 @@
 import "bootstrap/dist/css/bootstrap.min.css"
 import React, {useCallback, useEffect, useState} from "react"
 import Login from "./Login"
-import {ApiServerUrlContext, ApiUrlSessionIdContext, axiosInstance, RefreshAxiosInstance} from "./Common";
+import {ApiServerUrlContext, ApiUrlSessionIdContext, RefreshAxiosInstance} from "./Common";
 import {SessionListPanel} from "./SessionListPanel";
 import {SessionDashboard} from "./SessionDashboard";
-import axios from "axios";
 
 function App() {
   const [url, setUrl] = useState("");

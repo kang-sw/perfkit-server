@@ -1,5 +1,5 @@
 import React, {useRef, useState} from "react";
-import {useInterval, useIntervalState} from "./Utils";
+import {useIntervalImmediate} from "./Utils";
 import {axiosInstance} from "./Common";
 import {XTerm} from "xterm-for-react";
 import {FitAddon} from 'xterm-addon-fit'
@@ -19,13 +19,13 @@ export function SessionTerminal(prop: { url: string, sessionKey: string, session
   const history = useRef<Array<string>>([""]);
   const [historyCursor, setHistoryCursor] = useState(0);
 
-  useInterval(() => {
+  useIntervalImmediate(() => {
     axiosInstance
       .get(
         `shell/${prop.sessionKey}/${charFence}`)
       .then(function (fetched) {
         const data: ShellPacket = fetched.data;
-        if (charFence == data.sequence)
+        if (charFence === data.sequence)
           return;
 
         setCharFence(data.sequence)
