@@ -1,5 +1,5 @@
 import React, {useRef, useState} from "react";
-import {useInterval} from "./Utils";
+import {useInterval, useIntervalState} from "./Utils";
 import {axiosInstance} from "./Common";
 import {XTerm} from "xterm-for-react";
 import {FitAddon} from 'xterm-addon-fit'
@@ -25,6 +25,9 @@ export function SessionTerminal(prop: { url: string, sessionKey: string, session
         `shell/${prop.sessionKey}/${charFence}`)
       .then(function (fetched) {
         const data: ShellPacket = fetched.data;
+        if (charFence == data.sequence)
+          return;
+
         setCharFence(data.sequence)
 
         terminal.current?.terminal.write(data.content);
@@ -47,10 +50,10 @@ export function SessionTerminal(prop: { url: string, sessionKey: string, session
     history.current[history.current.length - 1] = shellInput;
 
     // control history
-    if (keyName == 'ArrowUp' || keyName == 'ArrowDown') {
+    if (keyName === 'ArrowUp' || keyName === 'ArrowDown') {
       e.preventDefault();
       let next = historyCursor;
-      if (keyName == 'ArrowUp')
+      if (keyName === 'ArrowUp')
         next += 1;
       else
         next -= 1;
@@ -61,20 +64,18 @@ export function SessionTerminal(prop: { url: string, sessionKey: string, session
           ? history.current.length - 1
           : next;
 
-      console.log(`next is ${next}, history is ${history.current}`)
-
-      if (next != historyCursor) {
+      if (next !== historyCursor) {
         setHistoryCursor(next);
         setShellInput(history.current[history.current.length - 1 - next]);
       }
       return;
     }
 
-    if (keyName != 'Enter' && keyName != 'Tab')
+    if (keyName !== 'Enter' && keyName !== 'Tab')
       return;
 
     e.preventDefault();
-    const isInvoke = keyName == 'Enter';
+    const isInvoke = keyName === 'Enter';
     const input = shellInput;
 
     if (isInvoke) {
@@ -84,7 +85,7 @@ export function SessionTerminal(prop: { url: string, sessionKey: string, session
       const bIsFirst = history.current.length < 2;
       const bDuplicated = !bIsFirst
         && (history.current[history.current.length - 1]
-          == history.current[history.current.length - 2])
+          === history.current[history.current.length - 2])
       const bNotEmpty = input.length > 0;
       if (bNotEmpty && !bDuplicated) {
         history.current.push(input);
@@ -104,7 +105,6 @@ export function SessionTerminal(prop: { url: string, sessionKey: string, session
       if (isInvoke)
         return; // don't wait for reply
 
-      console.log(fetched.data);
       const data: any = fetched.data;
       setShellInput(data['suggestion']);
 
@@ -134,7 +134,7 @@ export function SessionTerminal(prop: { url: string, sessionKey: string, session
         term.write(candidate);
         column += candidate.length;
 
-        while (column < cols && ++column % alignment != 0)
+        while (column < cols && ++column % alignment !== 0)
           term.write(' ');
       }
       term.write('\r\n\n');

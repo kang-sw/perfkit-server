@@ -2,7 +2,7 @@ import "bootstrap/dist/css/bootstrap.css"
 import {Button, Container, Row, Col} from "react-bootstrap"
 import React, {useState} from "react"
 import "rc-dock/dist/rc-dock.css"
-import {useIntervalImmediate} from "./Utils"
+import {useIntervalStateImmediate} from "./Utils"
 import {axiosInstance} from "./Common";
 
 interface SessionInfo {
@@ -15,8 +15,6 @@ interface SessionInfo {
 }
 
 function SessionListArgument(prop: { info: SessionInfo, onSelect: () => void }) {
-  console.log(JSON.stringify(prop.info));
-
   function AlignedLabel(prop: { tag: string, content: string }) {
     return <Row>
       <Col className={"text-start"}>{prop.tag}</Col>
@@ -44,22 +42,18 @@ export function SessionListPanel(prop: { url: string, onSelect: (id: string) => 
   const fetchSession = () => {
     axiosInstance.get( "sessions").then(
       (obj) => {
-        console.log(`fetched: ${JSON.stringify(obj.data)}`);
         const sessions: { [key: string]: SessionInfo } = obj.data['sessions'];
-        console.log(`fetched: ${JSON.stringify(sessions)}`);
-
         let sessList: any = [];
 
         for (const key in sessions) {
-          console.log(`${key} => ${sessions[key]}`);
           sessList.push(
             <SessionListArgument
               info={sessions[key]}
               key={key}
               onSelect={() => prop.onSelect(key)}/>);
         }
+        console.log(`${sessList.length} session${sessList.length > 1 ? "s" : ""} detected`);
 
-        console.log(`result list: ${JSON.stringify(sessList)}`);
         setSessionList(sessList);
       }
     ).catch((err) => {
@@ -67,7 +61,7 @@ export function SessionListPanel(prop: { url: string, onSelect: (id: string) => 
     })
   };
 
-  useIntervalImmediate(fetchSession, 3000);
+  useIntervalStateImmediate(fetchSession, 3000);
 
   return <div className={"overflow-auto"}>
     <div>.</div>

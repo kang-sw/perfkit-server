@@ -14,7 +14,7 @@ function App() {
 
   useEffect(
     () => {
-      if (activeSession.length == 0)
+      if (activeSession.length === 0)
         return;
 
       console.log(`active session changed: ${activeSession}`);
@@ -27,7 +27,7 @@ function App() {
 
   const onSessionDead = useCallback(
     (sessionKey: string) => {
-      if (sessionKey == activeSession)
+      if (sessionKey === activeSession)
         setActiveSession("");
 
       setDashboardRender(<div>Session Expired</div>);
