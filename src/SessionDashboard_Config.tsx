@@ -80,7 +80,7 @@ export function SessionConfigPanel(prop: { sessionKey: string }) {
     return <ConfigCategory key={name} name={name} entities={entities}/>
   })
 
-  return <div style={{padding: 0, fontFamily: "consolas", overflow: "auto", maxHeight: "100%"}}>{widgets}</div>
+  return <div style={{padding: 0, fontFamily: "consolas"}}>{widgets}</div>
 }
 
 

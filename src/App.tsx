@@ -51,7 +51,7 @@ function App() {
           notifySessionDie: onSessionDead
         }}>
 
-        <div style={{display: "flex", height: "100vh"}}>
+        <div style={{display: "flex", height: "100vh", overflow:"clip"}}>
           <div style={{minWidth: 400, flex: "0 1 0", overflow: "auto", borderRight: "1px solid black"}}>
             <SessionListPanel url={url} onSelect={setActiveSession}/>
           </div>
